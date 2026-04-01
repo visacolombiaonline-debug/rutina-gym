@@ -1,0 +1,575 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Dumbbell,
+  Timer,
+  Flame,
+  Waves,
+  ShowerHead,
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Target,
+  Activity,
+  CalendarDays,
+  Footprints,
+  Shield,
+  ArrowUpRight,
+  HeartPulse,
+  Play,
+  Pause,
+  RotateCcw,
+  CheckSquare,
+  Square,
+} from "lucide-react";
+
+const schedule = [
+  {
+    day: "Día 1",
+    title: "Espalda + Bíceps",
+    subtitle: "Incluye peso muerto",
+    focus: "Fuerza y densidad",
+    color: "from-red-600 to-rose-800",
+    exercises: [
+      ["Peso muerto", "3x6-8", "Técnico, sin fallo", "deadlift"],
+      ["Remo con barra", "4x8", "Espalda recta siempre", "barbell_row"],
+      ["Jalón al pecho", "4x10", "Agarre ancho", "lat_pulldown"],
+      ["Remo en polea", "3x12", "Controlado", "cable_row"],
+      ["Face pull", "3x15", "Hombro posterior", "face_pull"],
+      ["Curl barra", "3x10", "Bíceps", "barbell_curl"],
+      ["Curl alterno", "3x12", "Bíceps", "dumbbell_curl"],
+      ["Plank", "3x45 s", "Core", "plank"],
+      ["Vacuum", "3x20 s", "Core profundo", "vacuum"],
+    ],
+  },
+  {
+    day: "Día 2",
+    title: "Hombro + Core",
+    subtitle: "Enfoque estético",
+    focus: "Anchura y definición",
+    color: "from-red-500 to-red-800",
+    exercises: [
+      ["Press hombro", "4x8", "Controlado", "shoulder_press"],
+      ["Elevaciones laterales", "4x12", "Estrictas", "lateral_raise"],
+      ["Laterales en polea", "3x12", "Una por lado", "cable_lateral_raise"],
+      ["Pájaros / posterior", "4x15", "Deltoide posterior", "rear_delt_fly"],
+      ["Dead bug", "3x12", "Core", "dead_bug"],
+      ["Hanging leg raise", "3x10", "Abdomen", "hanging_leg_raise"],
+      ["Vacuum", "3x20 s", "Core profundo", "vacuum"],
+    ],
+  },
+  {
+    day: "Día 3",
+    title: "Pecho + Tríceps",
+    subtitle: "Empuje completo",
+    focus: "Volumen y fuerza",
+    color: "from-rose-500 to-red-900",
+    exercises: [
+      ["Press banca", "4x8", "Fuerte y limpio", "bench_press"],
+      ["Press inclinado", "4x10", "Mancuernas", "incline_press"],
+      ["Aperturas", "3x12", "Estiramiento controlado", "chest_fly"],
+      ["Fondos", "3 al fallo", "Pecho/tríceps", "dips"],
+      ["Tríceps en polea", "3x12", "Cuerda", "triceps_pushdown"],
+      ["Plank lateral", "3x30 s", "Core", "side_plank"],
+    ],
+  },
+  {
+    day: "Día 4",
+    title: "Pierna + Core",
+    subtitle: "Incluye sentadilla",
+    focus: "Pierna útil, sin exceso",
+    color: "from-red-700 to-red-950",
+    exercises: [
+      ["Sentadilla", "4x6-8", "Abdomen firme", "squat"],
+      ["Prensa", "4x10", "Control completo", "leg_press"],
+      ["Extensión", "3x12", "Cuádriceps", "leg_extension"],
+      ["Curl femoral", "3x12", "Femoral", "leg_curl"],
+      ["Vacuum", "4x20 s", "Core profundo", "vacuum"],
+      ["Crunch controlado", "3x15", "Abdomen", "crunch"],
+    ],
+  },
+  {
+    day: "Día 5",
+    title: "Espalda + Hombro posterior",
+    subtitle: "Ancho y detalle",
+    focus: "Look en V",
+    color: "from-red-500 to-rose-900",
+    exercises: [
+      ["Dominadas", "4 al fallo", "Agarre cómodo", "pull_up"],
+      ["Jalón cerrado", "4x10", "Espalda media", "close_grip_pulldown"],
+      ["Pullover en polea", "3x12", "Ancho dorsal", "pullover"],
+      ["Posterior hombro", "4x15", "Control total", "rear_delt_fly"],
+      ["Hanging leg raise", "3x10", "Core", "hanging_leg_raise"],
+      ["Vacuum", "3x20 s", "Core profundo", "vacuum"],
+    ],
+  },
+  {
+    day: "Día 6",
+    title: "Full Upper + Core",
+    subtitle: "Día largo + fútbol",
+    focus: "Bombeo y técnica",
+    color: "from-rose-500 to-red-800",
+    exercises: [
+      ["Press máquina", "3x12", "Ligero, bombeo", "machine_press"],
+      ["Jalón ligero", "3x12", "Rango completo", "lat_pulldown"],
+      ["Elevaciones laterales", "4x15", "Bombeo", "lateral_raise"],
+      ["Curl bíceps", "3x12", "Ligero", "dumbbell_curl"],
+      ["Tríceps polea", "3x12", "Ligero", "triceps_pushdown"],
+      ["Plank", "3x60 s", "Core", "plank"],
+      ["Dead bug", "3x12", "Core", "dead_bug"],
+      ["Vacuum", "5x20 s", "Core profundo", "vacuum"],
+      ["Fútbol", "1 h", "Cardio principal", "soccer"],
+    ],
+  },
+];
+
+const warmupTips = [
+  "5 min movilidad articular antes de pesas",
+  "Descanso 90–120 s en compuestos y 45–60 s en aislados",
+  "Técnica perfecta en peso muerto y sentadilla",
+  "No lleves peso muerto al fallo",
+  "Camina 20 min inclinada al final",
+  "Sauna/turco 20 min + 10 min baño y aseo",
+];
+
+function usePersistentState(key, initialValue) {
+  const [state, setState] = useState(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch {}
+  }, [key, state]);
+
+  return [state, setState];
+}
+
+// Exercise-specific images (reliable, descriptive, like initial version)
+const imageMap = {
+  deadlift: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Deadlift-1.png",
+  squat: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Squats-1.png",
+  bench_press: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Bench-press-1.png",
+  incline_press: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Incline-bench-press-1.png",
+  chest_fly: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Dumbbell-flys-1.png",
+  dips: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Bench-dips-1.png",
+  triceps_pushdown: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Triceps-pushdown-1.png",
+  shoulder_press: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Seated-dumbbell-press-1.png",
+  lateral_raise: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Dumbbell-lateral-raises-1.png",
+  cable_lateral_raise: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Dumbbell-lateral-raises-1.png",
+  rear_delt_fly: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Dumbbell-reverse-fly-1.png",
+  barbell_row: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Bent-over-barbell-row-1.png",
+  lat_pulldown: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Lat-pulldown-1.png",
+  close_grip_pulldown: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Close-grip-front-lat-pulldown-1.png",
+  cable_row: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Seated-cable-rows-1.png",
+  face_pull: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Face-pull-1.png",
+  barbell_curl: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Biceps-curl-1.png",
+  dumbbell_curl: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Bicep-curls-1.png",
+  plank: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Plank-1.png",
+  side_plank: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Side-plank-1.png",
+  dead_bug: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Dead-bug-1.png",
+  hanging_leg_raise: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Leg-raises-1.png",
+  vacuum: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Stomach-vacuum-1.png",
+  leg_press: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Leg-press-1-1024x670.png",
+  leg_extension: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Leg-extension-1.png",
+  leg_curl: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Lying-leg-curl-1.png",
+  pull_up: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Pull-up-1.png",
+  pullover: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Bent-arm-pullover-1.png",
+  machine_press: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Bench-press-1.png",
+  crunch: "https://raw.githubusercontent.com/chaosbastler/opentraining-exercises/master/Crunches-1.png",
+  soccer: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=900&q=80"
+};
+
+const youtubeMap = {
+  deadlift: "https://www.youtube.com/results?search_query=peso+muerto+t%C3%A9cnica",
+  squat: "https://www.youtube.com/results?search_query=sentadilla+t%C3%A9cnica",
+  bench_press: "https://www.youtube.com/results?search_query=press+de+banca+t%C3%A9cnica",
+  incline_press: "https://www.youtube.com/results?search_query=press+inclinado+mancuernas+t%C3%A9cnica",
+  chest_fly: "https://www.youtube.com/results?search_query=aperturas+con+mancuernas+t%C3%A9cnica",
+  dips: "https://www.youtube.com/results?search_query=fondos+paralelas+t%C3%A9cnica",
+  triceps_pushdown: "https://www.youtube.com/results?search_query=triceps+en+polea+cuerda+t%C3%A9cnica",
+  shoulder_press: "https://www.youtube.com/results?search_query=press+de+hombro+t%C3%A9cnica",
+  lateral_raise: "https://www.youtube.com/results?search_query=elevaciones+laterales+t%C3%A9cnica",
+  cable_lateral_raise: "https://www.youtube.com/results?search_query=elevaciones+laterales+polea+t%C3%A9cnica",
+  rear_delt_fly: "https://www.youtube.com/results?search_query=pajaros+hombro+posterior+t%C3%A9cnica",
+  barbell_row: "https://www.youtube.com/results?search_query=remo+con+barra+t%C3%A9cnica",
+  lat_pulldown: "https://www.youtube.com/results?search_query=jalon+al+pecho+t%C3%A9cnica",
+  close_grip_pulldown: "https://www.youtube.com/results?search_query=jalon+cerrado+t%C3%A9cnica",
+  cable_row: "https://www.youtube.com/results?search_query=remo+en+polea+t%C3%A9cnica",
+  face_pull: "https://www.youtube.com/results?search_query=face+pull+t%C3%A9cnica",
+  barbell_curl: "https://www.youtube.com/results?search_query=curl+barra+t%C3%A9cnica",
+  dumbbell_curl: "https://www.youtube.com/results?search_query=curl+alterno+mancuernas+t%C3%A9cnica",
+  plank: "https://www.youtube.com/results?search_query=plank+t%C3%A9cnica",
+  side_plank: "https://www.youtube.com/results?search_query=plancha+lateral+t%C3%A9cnica",
+  dead_bug: "https://www.youtube.com/results?search_query=dead+bug+ejercicio+t%C3%A9cnica",
+  hanging_leg_raise: "https://www.youtube.com/results?search_query=hanging+leg+raise+t%C3%A9cnica",
+  vacuum: "https://www.youtube.com/results?search_query=stomach+vacuum+t%C3%A9cnica",
+  leg_press: "https://www.youtube.com/results?search_query=prensa+de+pierna+t%C3%A9cnica",
+  leg_extension: "https://www.youtube.com/results?search_query=extension+de+pierna+t%C3%A9cnica",
+  leg_curl: "https://www.youtube.com/results?search_query=curl+femoral+t%C3%A9cnica",
+  pull_up: "https://www.youtube.com/results?search_query=dominadas+t%C3%A9cnica",
+  pullover: "https://www.youtube.com/results?search_query=pullover+en+polea+t%C3%A9cnica",
+  machine_press: "https://www.youtube.com/results?search_query=press+maquina+pecho+t%C3%A9cnica",
+  crunch: "https://www.youtube.com/results?search_query=crunch+abdominal+t%C3%A9cnica",
+  soccer: "https://www.youtube.com/results?search_query=calentamiento+futbol"
+};
+
+const embedMap = {
+  deadlift: "https://www.youtube.com/embed?listType=search&list=peso%20muerto%20tecnica",
+  squat: "https://www.youtube.com/embed?listType=search&list=sentadilla%20tecnica",
+  bench_press: "https://www.youtube.com/embed?listType=search&list=press%20de%20banca%20tecnica",
+  incline_press: "https://www.youtube.com/embed?listType=search&list=press%20inclinado%20mancuernas%20tecnica",
+  chest_fly: "https://www.youtube.com/embed?listType=search&list=aperturas%20mancuernas%20tecnica",
+  dips: "https://www.youtube.com/embed?listType=search&list=fondos%20paralelas%20tecnica",
+  triceps_pushdown: "https://www.youtube.com/embed?listType=search&list=triceps%20polea%20cuerda%20tecnica",
+  shoulder_press: "https://www.youtube.com/embed?listType=search&list=press%20de%20hombro%20tecnica",
+  lateral_raise: "https://www.youtube.com/embed?listType=search&list=elevaciones%20laterales%20tecnica",
+  cable_lateral_raise: "https://www.youtube.com/embed?listType=search&list=elevaciones%20laterales%20polea%20tecnica",
+  rear_delt_fly: "https://www.youtube.com/embed?listType=search&list=pajaros%20hombro%20posterior%20tecnica",
+  barbell_row: "https://www.youtube.com/embed?listType=search&list=remo%20con%20barra%20tecnica",
+  lat_pulldown: "https://www.youtube.com/embed?listType=search&list=jalon%20al%20pecho%20tecnica",
+  close_grip_pulldown: "https://www.youtube.com/embed?listType=search&list=jalon%20cerrado%20tecnica",
+  cable_row: "https://www.youtube.com/embed?listType=search&list=remo%20en%20polea%20tecnica",
+  face_pull: "https://www.youtube.com/embed?listType=search&list=face%20pull%20tecnica",
+  barbell_curl: "https://www.youtube.com/embed?listType=search&list=curl%20barra%20tecnica",
+  dumbbell_curl: "https://www.youtube.com/embed?listType=search&list=curl%20alterno%20mancuernas%20tecnica",
+  plank: "https://www.youtube.com/embed?listType=search&list=plank%20tecnica",
+  side_plank: "https://www.youtube.com/embed?listType=search&list=plancha%20lateral%20tecnica",
+  dead_bug: "https://www.youtube.com/embed?listType=search&list=dead%20bug%20ejercicio%20tecnica",
+  hanging_leg_raise: "https://www.youtube.com/embed?listType=search&list=hanging%20leg%20raise%20tecnica",
+  vacuum: "https://www.youtube.com/embed?listType=search&list=stomach%20vacuum%20tecnica",
+  leg_press: "https://www.youtube.com/embed?listType=search&list=prensa%20de%20pierna%20tecnica",
+  leg_extension: "https://www.youtube.com/embed?listType=search&list=extension%20de%20pierna%20tecnica",
+  leg_curl: "https://www.youtube.com/embed?listType=search&list=curl%20femoral%20tecnica",
+  pull_up: "https://www.youtube.com/embed?listType=search&list=dominadas%20tecnica",
+  pullover: "https://www.youtube.com/embed?listType=search&list=pullover%20polea%20tecnica",
+  machine_press: "https://www.youtube.com/embed?listType=search&list=press%20maquina%20pecho%20tecnica",
+  crunch: "https://www.youtube.com/embed?listType=search&list=crunch%20abdominal%20tecnica",
+  soccer: "https://www.youtube.com/embed?listType=search&list=calentamiento%20futbol"
+};
+
+function ExerciseArt({ type, title }) {
+  const src = imageMap[type];
+  return (
+    <div className="relative">
+      <div className="w-full h-36 rounded-2xl overflow-hidden border border-red-500/20 bg-black">
+        <img
+          src={src}
+          alt={title}
+          className="h-full w-full object-cover"
+        />
+      </div>
+      <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+        Ejercicio
+      </div>
+    </div>
+  );
+}
+
+function ExerciseCard({ ex, checked, onToggle }) {
+  const [name, sets, note, type] = ex;
+  const yt = youtubeMap[type] || `https://www.youtube.com/results?search_query=${encodeURIComponent(name + ' técnica')}`;
+  const embed = embedMap[type];
+  const [showVideo, setShowVideo] = useState(false);
+
+  return (
+    <div className="rounded-3xl border border-red-500/15 bg-white/5 p-3 shadow-lg shadow-black/20 backdrop-blur-sm">
+      <ExerciseArt type={type} title={name} />
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="flex gap-3">
+          <button onClick={onToggle} className="mt-0.5 text-red-300 hover:text-red-200">
+            {checked ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
+          </button>
+          <div>
+            <h4 className={`text-sm font-semibold ${checked ? "text-slate-400 line-through" : "text-white"}`}>{name}</h4>
+            <p className="mt-1 text-xs text-slate-300">{note}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowVideo((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-600/10 px-3 py-1.5 text-xs font-semibold text-red-200 hover:bg-red-600/20"
+              >
+                {showVideo ? "Ocultar video" : "Ver video aquí"}
+              </button>
+              <a
+                href={yt}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-white/10"
+              >
+                Abrir en YouTube
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-2xl bg-red-600/15 border border-red-500/20 px-3 py-1 text-xs font-bold text-red-100">
+          {sets}
+        </div>
+      </div>
+      {showVideo && embed && (
+        <div className="mt-3 overflow-hidden rounded-2xl border border-red-500/20 bg-black">
+          <div className="aspect-video w-full">
+            <iframe
+              className="h-full w-full"
+              src={embed}
+              title={`${name} video`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+export default function TrainingLandingLuis() {
+  const [activeDay, setActiveDay] = useState(0);
+  const [showTips, setShowTips] = useState(false);
+  const [timerSeconds, setTimerSeconds] = usePersistentState("luis-timer-seconds", 90);
+  const [initialTimer, setInitialTimer] = usePersistentState("luis-timer-initial", 90);
+  const [isRunning, setIsRunning] = usePersistentState("luis-timer-running", false);
+  const [checkedMap, setCheckedMap] = usePersistentState("luis-checks", {});
+
+  const active = schedule[activeDay];
+  const totalExercises = useMemo(() => active.exercises.length, [active]);
+  const dayKey = active.day;
+  const dayChecks = checkedMap[dayKey] || {};
+  const completedCount = Object.values(dayChecks).filter(Boolean).length;
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const id = setInterval(() => {
+      setTimerSeconds((prev) => {
+        if (prev <= 1) {
+          setIsRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [isRunning, setIsRunning, setTimerSeconds]);
+
+  const toggleCheck = (name) => {
+    setCheckedMap((prev) => ({
+      ...prev,
+      [dayKey]: {
+        ...(prev[dayKey] || {}),
+        [name]: !(prev[dayKey] || {})[name],
+      },
+    }));
+  };
+
+  const resetDayChecks = () => {
+    setCheckedMap((prev) => ({
+      ...prev,
+      [dayKey]: {},
+    }));
+  };
+
+  const setPreset = (sec) => {
+    setInitialTimer(sec);
+    setTimerSeconds(sec);
+    setIsRunning(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(185,28,28,0.25),_transparent_28%),linear-gradient(180deg,#050505_0%,#09090b_45%,#12090a_100%)] text-slate-100">
+      <div className="mx-auto max-w-md px-4 pb-24 pt-5">
+        <div className="mb-4 rounded-[28px] border border-red-500/15 bg-gradient-to-br from-black via-zinc-950 to-red-950/60 p-5 shadow-2xl shadow-red-950/20">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-red-300">Plan semanal</p>
+              <h1 className="mt-1 text-2xl font-bold">Rutina Luis</h1>
+              <p className="mt-1 text-sm text-slate-300">Versión móvil negro/rojo, lista para revisar antes de entrenar.</p>
+            </div>
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3">
+              <Dumbbell className="h-7 w-7 text-red-300" />
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+              <div className="flex items-center gap-2 text-slate-300"><Timer className="h-4 w-4" /> 2 horas</div>
+              <div className="mt-1 font-semibold">70 min pesas</div>
+            </div>
+            <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+              <div className="flex items-center gap-2 text-slate-300"><Footprints className="h-4 w-4" /> Cardio</div>
+              <div className="mt-1 font-semibold">20 min inclinada</div>
+            </div>
+            <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+              <div className="flex items-center gap-2 text-slate-300"><Waves className="h-4 w-4" /> Recuperación</div>
+              <div className="mt-1 font-semibold">20 min sauna/turco</div>
+            </div>
+            <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+              <div className="flex items-center gap-2 text-slate-300"><ShowerHead className="h-4 w-4" /> Aseo</div>
+              <div className="mt-1 font-semibold">10 min final</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4 rounded-[28px] border border-red-500/15 bg-black/40 p-4 shadow-xl shadow-black/20">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.25em] text-red-300">Cronómetro descanso</p>
+              <h2 className="mt-1 text-3xl font-bold tabular-nums text-white">{formatTime(timerSeconds)}</h2>
+              <p className="mt-1 text-xs text-slate-400">Usa 90–120 s en compuestos y 45–60 s en aislados.</p>
+            </div>
+            <div className="rounded-3xl border border-red-500/15 bg-red-950/20 p-4 text-center">
+              <Timer className="mx-auto h-7 w-7 text-red-300" />
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => setIsRunning(true)} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 font-semibold text-white shadow-lg shadow-red-900/30"><Play className="h-4 w-4" /> Iniciar</button>
+            <button onClick={() => setIsRunning(false)} className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-semibold text-slate-200"><Pause className="h-4 w-4" /> Pausar</button>
+            <button onClick={() => { setTimerSeconds(initialTimer); setIsRunning(false); }} className="flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-slate-200"><RotateCcw className="h-4 w-4" /></button>
+          </div>
+
+          <div className="mt-3 grid grid-cols-4 gap-2 text-xs">
+            {[45, 60, 90, 120].map((sec) => (
+              <button
+                key={sec}
+                onClick={() => setPreset(sec)}
+                className={`rounded-2xl px-3 py-2 font-semibold ${initialTimer === sec ? "bg-red-600 text-white" : "border border-white/10 bg-white/5 text-slate-300"}`}
+              >
+                {sec}s
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+          {schedule.map((item, idx) => (
+            <button
+              key={item.day}
+              onClick={() => setActiveDay(idx)}
+              className={`shrink-0 rounded-2xl border px-4 py-3 text-left transition ${
+                idx === activeDay
+                  ? `border-transparent bg-gradient-to-r ${item.color} text-white shadow-lg shadow-red-950/30`
+                  : "border-white/10 bg-white/5 text-slate-300"
+              }`}
+            >
+              <div className="text-xs font-semibold uppercase tracking-wide opacity-90">{item.day}</div>
+              <div className="text-sm font-bold">{item.title}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className={`rounded-[28px] bg-gradient-to-br ${active.color} p-[1px] shadow-xl shadow-red-950/25`}>
+          <div className="rounded-[27px] bg-black/95 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-slate-300">
+                  <CalendarDays className="h-4 w-4" /> {active.day}
+                </div>
+                <h2 className="mt-2 text-xl font-bold text-white">{active.title}</h2>
+                <p className="text-sm text-slate-300">{active.subtitle}</p>
+              </div>
+              <div className="rounded-2xl border border-red-500/15 bg-white/5 px-3 py-2 text-right">
+                <div className="text-[11px] uppercase tracking-wide text-slate-400">Enfoque</div>
+                <div className="text-sm font-semibold text-white">{active.focus}</div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+              <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+                <div className="flex items-center gap-1 text-slate-400"><Flame className="h-3.5 w-3.5" /> Pesas</div>
+                <div className="mt-1 font-semibold">65–70 min</div>
+              </div>
+              <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+                <div className="flex items-center gap-1 text-slate-400"><Target className="h-3.5 w-3.5" /> Progreso</div>
+                <div className="mt-1 font-semibold">{completedCount}/{totalExercises}</div>
+              </div>
+              <div className="rounded-2xl border border-red-500/10 bg-white/5 p-3">
+                <div className="flex items-center gap-1 text-slate-400"><Activity className="h-3.5 w-3.5" /> Hora</div>
+                <div className="mt-1 font-semibold">10:30 am</div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button onClick={resetDayChecks} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200">
+                Reiniciar checks
+              </button>
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-300">
+                Marca cada ejercicio al terminarlo
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {active.exercises.map((ex) => (
+                <ExerciseCard
+                  key={`${active.day}-${ex[0]}`}
+                  ex={ex}
+                  checked={!!dayChecks[ex[0]]}
+                  onToggle={() => toggleCheck(ex[0])}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-[28px] border border-red-500/15 bg-white/5 p-4">
+          <button
+            onClick={() => setShowTips((v) => !v)}
+            className="flex w-full items-center justify-between gap-3"
+          >
+            <div>
+              <h3 className="text-base font-bold text-white">Checklist rápido antes de entrenar</h3>
+              <p className="text-sm text-slate-300">Lo mínimo para que el plan funcione de verdad.</p>
+            </div>
+            {showTips ? <ChevronUp className="h-5 w-5 text-slate-300" /> : <ChevronDown className="h-5 w-5 text-slate-300" />}
+          </button>
+
+          {showTips && (
+            <div className="mt-4 grid gap-2">
+              {warmupTips.map((tip) => (
+                <div key={tip} className="flex items-start gap-2 rounded-2xl border border-red-500/10 bg-black/35 p-3 text-sm text-slate-200">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  <span>{tip}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 grid gap-3">
+          <div className="rounded-[28px] border border-red-500/15 bg-white/5 p-4">
+            <div className="flex items-center gap-2 text-white"><Shield className="h-5 w-5 text-amber-300" /> <h3 className="font-bold">Notas de seguridad</h3></div>
+            <ul className="mt-3 space-y-2 text-sm text-slate-300">
+              <li>• En peso muerto y sentadilla: técnica antes que peso.</li>
+              <li>• Si la espalda baja molesta más de lo normal, baja carga ese día.</li>
+              <li>• No lleves los ejercicios lumbares al fallo.</li>
+            </ul>
+          </div>
+
+          <div className="rounded-[28px] border border-red-500/15 bg-white/5 p-4">
+            <div className="flex items-center gap-2 text-white"><ArrowUpRight className="h-5 w-5 text-red-300" /> <h3 className="font-bold">Progresión semanal</h3></div>
+            <ul className="mt-3 space-y-2 text-sm text-slate-300">
+              <li>• Si completas todas las repeticiones, sube 2.5 kg la semana siguiente en compuestos.</li>
+              <li>• En aislados, sube peso cuando completes el rango con técnica limpia.</li>
+              <li>• Toma foto del abdomen y peso 1 vez por semana, en ayunas.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-[28px] border border-red-500/15 bg-gradient-to-br from-black via-zinc-950 to-red-950/40 p-4 text-sm text-slate-300">
+          <div className="flex items-center gap-2 text-white"><HeartPulse className="h-5 w-5 text-red-300" /> <h3 className="font-bold">Meta del plan</h3></div>
+          <p className="mt-2">Mantener músculo, ensanchar espalda, marcar hombros y ayudar a bajar barriga con fuerza + caminata inclinada + core profundo.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
