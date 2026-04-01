@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <meta name="theme-color" content="#7f1d1d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Rutina Luis" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b0f'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='34'%3E%F0%9F%92%AA%3C/text%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%230b0b0f'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='92'%3E%F0%9F%92%AA%3C/text%3E%3C/svg%3E" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rutina Luis</title>
@@ -333,10 +339,94 @@
       line-height: 1.45;
     }
 
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, rgba(185,28,28,.22), transparent 28%), linear-gradient(180deg, #050505 0%, #09090b 45%, #12090a 100%);
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+
+    .loading-screen.hide {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loading-card {
+      width: min(88vw, 360px);
+      padding: 28px 22px;
+      border-radius: 28px;
+      border: 1px solid rgba(239,68,68,0.2);
+      background: linear-gradient(135deg, #000 0%, #0f0f10 55%, rgba(127,29,29,.45) 100%);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .loading-icon {
+      font-size: 54px;
+      line-height: 1;
+    }
+
+    .loading-title {
+      margin-top: 12px;
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .loading-sub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .loading-bar {
+      margin-top: 18px;
+      height: 10px;
+      width: 100%;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .loading-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #dc2626, #fb7185);
+      animation: loadbar 1.2s ease forwards;
+    }
+
+    @keyframes loadbar {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    .install-tip {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(239,68,68,0.12);
+      background: rgba(0,0,0,0.24);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
     .muted { color: var(--muted-2); }
   </style>
 </head>
 <body>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="loading-card">
+      <div class="loading-icon">💪</div>
+      <div class="loading-title">Rutina Luis</div>
+      <div class="loading-sub">Cargando tu plan de entrenamiento y tu progreso guardado.</div>
+      <div class="loading-bar"><div class="loading-fill"></div></div>
+    </div>
+  </div>
   <div class="container">
     <div class="card hero">
       <div class="eyebrow">Plan semanal</div>
@@ -419,6 +509,11 @@
         <div class="bullet">En aislados, sube peso cuando completes el rango con técnica limpia.</div>
         <div class="bullet">Toma foto del abdomen y peso 1 vez por semana, en ayunas.</div>
       </div>
+    </div>
+
+    <div class="install-tip section">
+      <strong>Icono tipo app</strong><br>
+      Cuando publiques esto en Netlify, abre el enlace en tu teléfono y usa <strong>“Agregar a pantalla de inicio”</strong>. El icono ya quedó configurado.
     </div>
 
     <div class="footer-note section">
@@ -636,6 +731,7 @@
     const tipsEl = document.getElementById('tips');
 
     let activeDay = Number(localStorage.getItem('luis-active-day') || 0);
+    const loadingScreen = document.getElementById('loadingScreen');
     let checks = JSON.parse(localStorage.getItem('luis-checks-html') || '{}');
 
     function saveChecks() {
@@ -800,6 +896,10 @@
     renderTips();
     renderTabs();
     renderDay();
+
+    setTimeout(() => {
+      loadingScreen.classList.add('hide');
+    }, 1100);
   </script>
 </body>
 </html>
