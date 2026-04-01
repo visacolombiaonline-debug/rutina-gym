@@ -92,6 +92,81 @@
       background: rgba(0,0,0,0.35);
     }
 
+    .meta-track {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 22px;
+      border: 1px solid rgba(16,185,129,0.16);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .meta-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .meta-total {
+      font-size: 22px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meta-sub {
+      color: var(--muted-2);
+      font-size: 12px;
+    }
+
+    .track-wrap {
+      position: relative;
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      overflow: visible;
+    }
+
+    .track-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      transition: width .35s ease;
+    }
+
+    .checkpoint {
+      position: absolute;
+      top: -8px;
+      width: 2px;
+      height: 30px;
+      background: rgba(255,255,255,0.22);
+    }
+
+    .checkpoint.done {
+      background: #34d399;
+    }
+
+    .checkpoint-label {
+      position: absolute;
+      top: 26px;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 11px;
+      color: var(--muted-2);
+      text-align: center;
+    }
+
+    .checkpoint-label strong {
+      display: block;
+      color: white;
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
     .timer-display {
       font-size: 40px;
       font-weight: 800;
@@ -147,6 +222,53 @@
       background: linear-gradient(135deg, #dc2626, #7f1d1d);
       color: white;
       border-color: transparent;
+    }
+
+    .accordion-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .accordion-day {
+      border-radius: 24px;
+      border: 1px solid rgba(239,68,68,0.16);
+      background: rgba(255,255,255,0.04);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .accordion-btn {
+      width: 100%;
+      text-align: left;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(220,38,38,0.18), rgba(127,29,29,0.18));
+      border: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .accordion-btn span small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 16px;
+      background: rgba(5,5,5,0.96);
+    }
+
+    .accordion-day.open .accordion-content {
+      display: block;
     }
 
     .workout-shell {
@@ -441,9 +563,9 @@
     </div>
 
     <div class="card timer-card section">
-      <div class="eyebrow">Cronómetro descanso</div>
+      <div class="eyebrow">Cronómetros</div>
       <div class="timer-display" id="timerDisplay">01:30</div>
-      <p class="sub">Usa 90–120 s en compuestos y 45–60 s en aislados.</p>
+      <p class="sub">Descanso entre series. Usa 90–120 s en compuestos y 45–60 s en aislados.</p>
       <div class="timer-buttons">
         <button class="btn-primary" id="startBtn">Iniciar</button>
         <button class="btn-dark" id="pauseBtn">Pausar</button>
@@ -455,23 +577,22 @@
         <button class="btn-dark preset active" data-seconds="90">90 s</button>
         <button class="btn-dark preset" data-seconds="120">120 s</button>
       </div>
+
+      <div class="meta-track">
+        <div class="meta-top">
+          <div>
+            <div class="eyebrow" style="color:#6ee7b7; letter-spacing:.18em;">Meta de 2 horas</div>
+            <div class="meta-sub">Progreso total del bloque: pesas, inclinada, sauna/turco y aseo.</div>
+          </div>
+          <div class="meta-total" id="metaElapsed">00:00 / 02:00:00</div>
+        </div>
+        <div class="track-wrap" id="metaTrackWrap">
+          <div class="track-fill" id="metaTrackFill"></div>
+        </div>
+      </div>
     </div>
 
-    <div class="tabs" id="tabs"></div>
-
-    <div class="workout-shell">
-      <div class="workout-inner">
-        <div>
-          <div class="eyebrow" id="dayLabel">Día 1</div>
-          <h2 id="dayTitle" style="margin-top:8px; font-size:28px;">Espalda + Bíceps</h2>
-          <p class="sub" id="daySubtitle">Incluye peso muerto</p>
-        </div>
-
-        <div class="pill-grid">
-          <div class="pill">Pesas<strong>65–70 min</strong></div>
-          <div class="pill">Progreso<strong id="progressText">0/0</strong></div>
-          <div class="pill">Hora<strong>10:30 am</strong></div>
-        </div>
+    <div class="accordion-list" id="accordionList"></div>
 
         <div class="actions">
           <button class="btn-dark" id="resetChecksBtn">Reiniciar checks</button>
@@ -722,13 +843,11 @@
       soccer: "https://www.youtube.com/embed?listType=search&list=calentamiento%20futbol"
     };
 
-    const tabsEl = document.getElementById('tabs');
-    const exerciseListEl = document.getElementById('exerciseList');
-    const dayLabelEl = document.getElementById('dayLabel');
-    const dayTitleEl = document.getElementById('dayTitle');
-    const daySubtitleEl = document.getElementById('daySubtitle');
-    const progressTextEl = document.getElementById('progressText');
+    const accordionListEl = document.getElementById('accordionList');
     const tipsEl = document.getElementById('tips');
+    const metaTrackWrap = document.getElementById('metaTrackWrap');
+    const metaTrackFill = document.getElementById('metaTrackFill');
+    const metaElapsed = document.getElementById('metaElapsed');
 
     let activeDay = Number(localStorage.getItem('luis-active-day') || 0);
     const loadingScreen = document.getElementById('loadingScreen');
@@ -738,12 +857,62 @@
       localStorage.setItem('luis-checks-html', JSON.stringify(checks));
     }
 
-    function renderTabs() {
-      tabsEl.innerHTML = '';
+    function buildMetaCheckpoints() {
+      const checkpoints = [
+        { label: 'Pesas', mins: 70 },
+        { label: 'Inclinada', mins: 90 },
+        { label: 'Sauna/Turco', mins: 110 },
+        { label: 'Aseo', mins: 120 }
+      ];
+      metaTrackWrap.querySelectorAll('.checkpoint, .checkpoint-label').forEach(el => el.remove());
+      checkpoints.forEach(cp => {
+        const left = (cp.mins / 120) * 100;
+        const mark = document.createElement('div');
+        mark.className = 'checkpoint';
+        mark.style.left = `${left}%`;
+        mark.dataset.mins = cp.mins;
+        const label = document.createElement('div');
+        label.className = 'checkpoint-label';
+        label.style.left = `${left}%`;
+        label.innerHTML = `<strong>${cp.label}</strong>${cp.mins} min`;
+        metaTrackWrap.appendChild(mark);
+        metaTrackWrap.appendChild(label);
+      });
+    }
+
+    function renderAccordion() {
+      accordionListEl.innerHTML = '';
       schedule.forEach((item, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'tab' + (idx === activeDay ? ' active' : '');
-        btn.innerHTML = `<div style="font-size:11px;font-weight:700;text-transform:uppercase;opacity:.9;">${item.day}</div><div style="margin-top:4px;font-size:14px;font-weight:800;">${item.title}</div>`;
+        const key = item.day;
+        const dayChecks = checks[key] || {};
+        const done = Object.values(dayChecks).filter(Boolean).length;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'accordion-day' + (idx === activeDay ? ' open' : '');
+        wrapper.innerHTML = `
+          <button class="accordion-btn">
+            <span>
+              ${item.day} – ${item.title}
+              <small>${item.subtitle}</small>
+            </span>
+            <span>${done}/${item.exercises.length}</span>
+          </button>
+          <div class="accordion-content"></div>
+        `;
+
+        const btn = wrapper.querySelector('.accordion-btn');
+        const content = wrapper.querySelector('.accordion-content');
+        btn.onclick = () => {
+          activeDay = idx;
+          localStorage.setItem('luis-active-day', String(idx));
+          renderAccordion();
+        };
+
+        if (idx === activeDay) {
+          content.appendChild(buildDayContent(item));
+        }
+        accordionListEl.appendChild(wrapper);
+      });
+    }</div><div style="margin-top:4px;font-size:14px;font-weight:800;">${item.title}</div>`;
         btn.onclick = () => {
           activeDay = idx;
           localStorage.setItem('luis-active-day', String(idx));
@@ -764,13 +933,89 @@
       });
     }
 
-    function renderDay() {
-      const item = schedule[activeDay];
-      dayLabelEl.textContent = item.day;
-      dayTitleEl.textContent = item.title;
-      daySubtitleEl.textContent = item.subtitle;
+    function buildDayContent(item) {
       const key = item.day;
       const dayChecks = checks[key] || {};
+      const done = Object.values(dayChecks).filter(Boolean).length;
+
+      const shell = document.createElement('div');
+      shell.innerHTML = `
+        <div>
+          <div class="eyebrow">${item.day}</div>
+          <h2 style="margin-top:8px; font-size:28px;">${item.title}</h2>
+          <p class="sub">${item.subtitle}</p>
+        </div>
+        <div class="pill-grid">
+          <div class="pill">Pesas<strong>65–70 min</strong></div>
+          <div class="pill">Progreso<strong>${done}/${item.exercises.length}</strong></div>
+          <div class="pill">Hora<strong>10:30 am</strong></div>
+        </div>
+        <div class="actions">
+          <button class="btn-dark reset-day-checks">Reiniciar checks</button>
+          <div class="btn-green">Marca cada ejercicio al terminarlo</div>
+        </div>
+        <div class="exercise-list"></div>
+      `;
+
+      shell.querySelector('.reset-day-checks').onclick = () => {
+        checks[key] = {};
+        saveChecks();
+        renderAccordion();
+      };
+
+      const list = shell.querySelector('.exercise-list');
+      item.exercises.forEach(ex => {
+        const [name, sets, note, type] = ex;
+        const checked = !!dayChecks[name];
+        const embed = embedMap[type] || '';
+        const yt = youtubeMap[type] || '#';
+
+        const card = document.createElement('div');
+        card.className = 'exercise-card';
+        card.innerHTML = `
+          <div class="exercise-image">
+            <img src="${imageMap[type] || ''}" alt="${name}">
+            <div class="badge">Ejercicio</div>
+          </div>
+          <div class="exercise-meta">
+            <div class="exercise-left">
+              <button class="check ${checked ? 'checked' : ''}">${checked ? '✓' : ''}</button>
+              <div>
+                <div class="exercise-title ${checked ? 'done' : ''}">${name}</div>
+                <div class="exercise-note">${note}</div>
+                <div class="link-row">
+                  <button class="btn-primary toggle-video">Ver video aquí</button>
+                  <a class="link-btn btn-dark" href="${yt}" target="_blank" rel="noreferrer">Abrir en YouTube</a>
+                </div>
+              </div>
+            </div>
+            <div class="sets">${sets}</div>
+          </div>
+          <div class="video-shell">
+            <iframe src="${embed}" title="${name} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+          </div>
+        `;
+
+        const checkBtn = card.querySelector('.check');
+        checkBtn.onclick = () => {
+          if (!checks[key]) checks[key] = {};
+          checks[key][name] = !checks[key][name];
+          saveChecks();
+          renderAccordion();
+        };
+
+        const videoBtn = card.querySelector('.toggle-video');
+        const videoShell = card.querySelector('.video-shell');
+        videoBtn.onclick = () => {
+          const show = videoShell.classList.toggle('show');
+          videoBtn.textContent = show ? 'Ocultar video' : 'Ver video aquí';
+        };
+
+        list.appendChild(card);
+      });
+
+      return shell;
+    };
       const done = Object.values(dayChecks).filter(Boolean).length;
       progressTextEl.textContent = `${done}/${item.exercises.length}`;
 
@@ -827,8 +1072,22 @@
       });
     }
 
-    document.getElementById('resetChecksBtn').onclick = () => {
-      checks[schedule[activeDay].day] = {};
+    let metaElapsedSeconds = Number(localStorage.getItem('luis-meta-elapsed') || 0);
+    let metaRunning = false;
+    let metaIntervalId = null;
+
+    function renderMetaTrack() {
+      const pct = Math.min((metaElapsedSeconds / 7200) * 100, 100);
+      metaTrackFill.style.width = `${pct}%`;
+      const h = String(Math.floor(metaElapsedSeconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((metaElapsedSeconds % 3600) / 60)).padStart(2, '0');
+      const s = String(metaElapsedSeconds % 60).padStart(2, '0');
+      metaElapsed.textContent = `${h}:${m}:${s} / 02:00:00`;
+      metaTrackWrap.querySelectorAll('.checkpoint').forEach(cp => {
+        cp.classList.toggle('done', metaElapsedSeconds >= Number(cp.dataset.mins) * 60);
+      });
+      localStorage.setItem('luis-meta-elapsed', String(metaElapsedSeconds));
+    }
       saveChecks();
       renderDay();
     };
@@ -857,6 +1116,15 @@
     document.getElementById('startBtn').onclick = () => {
       if (running) return;
       running = true;
+      if (!metaRunning) {
+        metaRunning = true;
+        metaIntervalId = setInterval(() => {
+          if (metaElapsedSeconds < 7200) {
+            metaElapsedSeconds += 1;
+            renderMetaTrack();
+          }
+        }, 1000);
+      }
       intervalId = setInterval(() => {
         if (timer <= 1) {
           timer = 0;
@@ -873,6 +1141,8 @@
     document.getElementById('pauseBtn').onclick = () => {
       running = false;
       clearInterval(intervalId);
+      metaRunning = false;
+      clearInterval(metaIntervalId);
     };
 
     document.getElementById('resetBtn').onclick = () => {
@@ -892,10 +1162,11 @@
       };
     });
 
+    buildMetaCheckpoints();
+    renderMetaTrack();
     renderTimer();
     renderTips();
-    renderTabs();
-    renderDay();
+    renderAccordion();
 
     setTimeout(() => {
       loadingScreen.classList.add('hide');
